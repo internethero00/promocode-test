@@ -1,4 +1,6 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreatePromoCodeDto } from './create-promo-code.dto';
+import { IsEmail } from 'class-validator';
 
-export class ActivatePromoCodeDto extends PartialType(CreatePromoCodeDto) {}
+export class ActivatePromoCodeDto {
+  @IsEmail()
+  email: string;
+}
