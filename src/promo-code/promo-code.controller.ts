@@ -1,15 +1,26 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  ParseUUIDPipe,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import { PromoCodeService } from './promo-code.service';
 import { CreatePromoCodeDto } from './dto/create-promo-code.dto';
 import { ActivatePromoCodeDto } from './dto/activate-promo-code.dto';
 
-@Controller('promo-code')
+@Controller('promo-codes')
 export class PromoCodeController {
   constructor(private readonly promoCodeService: PromoCodeService) {}
 
   @Post()
-  create(@Body() createPromoCodeDto: CreatePromoCodeDto) {
-    return this.promoCodeService.create(createPromoCodeDto);
+  create(@Body() dto: CreatePromoCodeDto) {
+    return this.promoCodeService.create(dto);
   }
 
   @Get()
@@ -18,17 +29,16 @@ export class PromoCodeController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.promoCodeService.findOne(+id);
+  findById(@Param('id', ParseUUIDPipe) id: string) {
+    return this.promoCodeService.findById(id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePromoCodeDto: ActivatePromoCodeDto) {
-    return this.promoCodeService.update(+id, updatePromoCodeDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.promoCodeService.remove(+id);
+  @Post(':id/activate')
+  @HttpCode(HttpStatus.OK)
+  activate(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: ActivatePromoCodeDto,
+  ) {
+    return this.promoCodeService.activate(id, dto.email);
   }
 }
