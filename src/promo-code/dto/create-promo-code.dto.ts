@@ -6,6 +6,7 @@ import {
   Max,
   MinLength,
 } from 'class-validator';
+import { IsFutureDate } from '../../common/validators/is-future-date.validator';
 
 export class CreatePromoCodeDto {
   @IsString()
@@ -22,5 +23,6 @@ export class CreatePromoCodeDto {
   activationLimit: number;
 
   @IsDateString()
+  @IsFutureDate()
   expiresAt: string;
 }
