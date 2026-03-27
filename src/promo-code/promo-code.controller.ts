@@ -4,7 +4,6 @@ import {
   Post,
   Body,
   Param,
-  ParseUUIDPipe,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
@@ -28,28 +27,27 @@ export class PromoCodeController {
 
   @Get()
   @ApiOperation({ summary: 'Get all promo codes' })
+  @ApiResponse({ status: 200, description: 'List of promo codes' })
   findAll() {
     return this.promoCodeService.findAll();
   }
 
-  @Get(':id')
-  @ApiOperation({ summary: 'Get promo code by ID' })
-  @ApiResponse({ status: 404, description: 'Not found' })
-  findById(@Param('id', ParseUUIDPipe) id: string) {
-    return this.promoCodeService.findById(id);
+  @Get(':code')
+  @ApiOperation({ summary: 'Get promo code by code' })
+  @ApiResponse({ status: 200, description: 'Promo code found' })
+  @ApiResponse({ status: 404, description: 'Promo code not found' })
+  findByCode(@Param('code') code: string) {
+    return this.promoCodeService.findByCode(code);
   }
 
-  @Post(':id/activate')
+  @Post(':code/activate')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Activate promo code by email' })
   @ApiResponse({ status: 200, description: 'Activated successfully' })
   @ApiResponse({ status: 400, description: 'Expired or limit reached' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @ApiResponse({ status: 409, description: 'Already activated by this email' })
-  activate(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: ActivatePromoCodeDto,
-  ) {
-    return this.promoCodeService.activate(id, dto.email);
+  activate(@Param('code') code: string, @Body() dto: ActivatePromoCodeDto) {
+    return this.promoCodeService.activate(code, dto.email);
   }
 }

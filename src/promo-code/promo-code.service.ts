@@ -40,9 +40,9 @@ export class PromoCodeService {
     });
   }
 
-  async findById(id: string) {
+  async findByCode(code: string) {
     const promoCode = await this.prismaService.promoCode.findUnique({
-      where: { id },
+      where: { code },
       include: {
         activations: { orderBy: { activatedAt: 'desc' } },
         _count: { select: { activations: true } },
@@ -56,11 +56,11 @@ export class PromoCodeService {
     return promoCode;
   }
 
-  async activate(id: string, email: string) {
+  async activate(code: string, email: string) {
     return this.prismaService.$transaction(
       async (tx) => {
         const promoCode = await tx.promoCode.findUnique({
-          where: { id },
+          where: { code },
           include: { _count: { select: { activations: true } } },
         });
 
@@ -72,28 +72,31 @@ export class PromoCodeService {
           throw new BadRequestException('Promo code has expired');
         }
 
+        const existing = await tx.activation.findUnique({
+          where: {
+            promoCodeId_email: {
+              promoCodeId: promoCode.id,
+              email: email.toLowerCase().trim(),
+            },
+          },
+        });
+
+        if (existing) {
+          throw new ConflictException(
+            'This email has already activated this promo code',
+          );
+        }
+
         if (promoCode._count.activations >= promoCode.activationLimit) {
           throw new BadRequestException('Activation limit reached');
         }
 
-        try {
-          return await tx.activation.create({
-            data: {
-              promoCodeId: id,
-              email: email.toLowerCase().trim(),
-            },
-          });
-        } catch (error) {
-          if (
-            error instanceof Prisma.PrismaClientKnownRequestError &&
-            error.code === 'P2002'
-          ) {
-            throw new ConflictException(
-              'This email has already activated this promo code',
-            );
-          }
-          throw error;
-        }
+        return tx.activation.create({
+          data: {
+            promoCodeId: promoCode.id,
+            email: email.toLowerCase().trim(),
+          },
+        });
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
     );
