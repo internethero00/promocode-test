@@ -1,0 +1,1 @@
+CREATE DATABASE promo_code_test;
