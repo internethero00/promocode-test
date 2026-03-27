@@ -1,5 +1,5 @@
 services:
-  tooly-auth-db:
+  db:
     image: postgres:16
     container_name: promo_code-db
     environment:
@@ -10,7 +10,23 @@ services:
       - "5435:5432"
     volumes:
       - promo_code_pg:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: pg_isready -U postgres
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  app:
+    build: .
+    container_name: promo_code-app
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/promo_code?schema=public
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
   promo_code_pg:
-
